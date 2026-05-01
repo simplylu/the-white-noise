@@ -396,12 +396,18 @@
       try{
         const groups = await loadGroups();
         if(Array.isArray(groups) && groups.length){
-          const handle = (getHandle(p) || '').toLowerCase();
+          // normalize helpers to reduce accidental/short matches
+          function normalizeUsername(u){ if(!u) return ''; u = String(u).toLowerCase().trim(); if(u.startsWith('@')) u = u.slice(1); return u.replace(/^\/+|\/+$/g,''); }
+          function normalizePath(u){ if(!u) return ''; u = String(u).toLowerCase().trim(); try{ const url = new URL(u, location.origin); return (url.pathname + (url.search||'') + (url.hash||'')).replace(/\/+$/,''); }catch(e){ return u.replace(/^https?:\/\/[^\/]+/,'').replace(/\/+$/,''); } }
+
+          const handle = normalizeUsername(getHandle(p));
           const usernames = new Set();
-          if(p.username) usernames.add(String(p.username).toLowerCase());
-          if(p.handle) usernames.add(String(p.handle).toLowerCase());
+          if(p.username) usernames.add(normalizeUsername(p.username));
+          if(p.handle) usernames.add(normalizeUsername(p.handle));
           if(handle) usernames.add(handle);
-          const display = (p.display_name || p.name || '').toLowerCase();
+          const displayRaw = p.display_name || p.name || '';
+          const display = String(displayRaw || '').trim();
+          const displayLower = display.toLowerCase();
           const found = [];
           for(const g of groups){
             const gName = g && (g.name||g.title||'') || '';
@@ -411,12 +417,25 @@
               const msgsArr = Array.isArray(t.messages) ? t.messages : [];
               for(const m of msgsArr){
                 if(!m) continue;
-                const mu = (m.username||'').toLowerCase(); const an = (m.author_name||'').toLowerCase(); const al = (m.author_link||'');
+                const mu = normalizeUsername(m.username||m.user||'');
+                const an = String(m.author_name||'').trim(); const anLower = an.toLowerCase();
+                const al = String(m.author_link||'');
                 let matched = false;
+                // exact username match (preferred)
                 if(mu && usernames.has(mu)) matched = true;
-                else if(mu && display && mu === display) matched = true;
-                else if(an && display && an === display) matched = true;
-                else if(al && p.url && String(p.url).length && al.indexOf(p.url)!==-1) matched = true;
+                // exact author_name == display_name (require a minimum length to avoid short-name collisions)
+                else if(an && display && anLower === displayLower && displayLower.length >= 4) matched = true;
+                // author_link matches profile URL or ends with a username path segment
+                else if(al && p.url){
+                  const nAl = normalizePath(al); const nP = normalizePath(p.url);
+                  if(nAl && nP && nAl === nP) matched = true;
+                  else {
+                    for(const u of Array.from(usernames)){
+                      if(!u || u.length < 3) continue;
+                      if(nAl.endsWith('/' + u) || nAl.endsWith('/@' + u) || nAl.indexOf('/' + u + '/') !== -1){ matched = true; break; }
+                    }
+                  }
+                }
                 if(matched){
                   found.push({groupName: gName, topicTitle: t.title||'', message: m, groupIdx:null, topicIdx: null});
                   if(found.length >= 200) break;
