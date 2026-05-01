@@ -39,7 +39,7 @@
   }
   const resp = await fetch(profilesUrl);
   const data = await resp.json();
-  const profiles = data.profiles || [];
+  const profiles = Array.isArray(data) ? data : (data.profiles || []);
 
   // assign stable index and hash id for each profile
   function makeHashId(p, idx, used){
