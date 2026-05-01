@@ -26,6 +26,9 @@
     if(!raw) return '';
     raw = String(raw).trim();
     if(raw.startsWith('//')) return 'https:' + raw;
+    // rewrite absolute full-URL images that point to a /images/ path on the same host
+    const hostImg = raw.match(/^https?:\/\/[^\/]+(\/images\/.*)$/i);
+    if(hostImg){ return PROJECT_BASE + hostImg[1].replace(/^\/+/, ''); }
     if(raw.startsWith('/')){
       // local app paths need PROJECT_BASE prefix
       if(raw.startsWith('/images/') || raw.startsWith('/site/') || raw.startsWith('/profiles') || raw.startsWith('/media')){

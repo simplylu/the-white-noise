@@ -463,15 +463,15 @@
   function renderMatrixTable(tableData, xLabel, yLabel){
     const container = $('matrixContainer'); if(!container) return;
     const {counts,xVals,yVals, xTotals, yTotals} = tableData;
-    // compute max for coloring (ignore zero cells)
-    let max = 0; for(const xr of xVals){ for(const yr of yVals){ const v = (counts[xr] && counts[xr][yr])?counts[xr][yr]:0; if(v>max) max=v }}
+    // compute max column-percent for coloring (ignore zero cells)
+    let maxPct = 0; for(const xr of xVals){ for(const yr of yVals){ const v = (counts[xr] && counts[xr][yr])?counts[xr][yr]:0; const colTotal = yTotals[yr] || 0; const cellPct = colTotal ? (v/colTotal) : 0; if(cellPct>maxPct) maxPct = cellPct }}
     const tbl = document.createElement('table'); tbl.style.borderCollapse='collapse'; tbl.style.width='100%'; tbl.style.margin='8px 0';
     const thead = document.createElement('thead'); const hrow = document.createElement('tr'); hrow.appendChild(document.createElement('th'));
     for(const y of yVals){ if(y === '(empty)') continue; const th = document.createElement('th'); th.textContent = y; th.style.padding='6px'; th.style.border='1px solid #ddd'; th.style.fontSize='12px'; hrow.appendChild(th) }
     thead.appendChild(hrow); tbl.appendChild(thead);
     const tbody = document.createElement('tbody');
     for(const x of xVals){ if(x === '(empty)') continue; const tr = document.createElement('tr'); const th = document.createElement('th'); th.textContent = x; th.style.padding='6px'; th.style.border='1px solid #ddd'; th.style.textAlign='left'; th.style.fontSize='12px'; tr.appendChild(th);
-      for(const y of yVals){ if(y === '(empty)') continue; const td = document.createElement('td'); const v = (counts[x] && counts[x][y])?counts[x][y]:0; const colTotal = yTotals[y] || 0; const pct = colTotal ? (v/colTotal*100) : 0; td.textContent = `${v}${colTotal? ' (' + pct.toFixed(1) + '%)':''}`; td.style.padding='6px'; td.style.border='1px solid #eee'; td.style.textAlign='center'; td.style.fontSize='12px'; const intensity = max? (v/max):0; const alpha = 0.18 + 0.72*intensity; td.style.background = `rgba(43,140,196,${alpha})`; td.style.color = intensity>0.45? '#fff':'#111'; tr.appendChild(td) }
+      for(const y of yVals){ if(y === '(empty)') continue; const td = document.createElement('td'); const v = (counts[x] && counts[x][y])?counts[x][y]:0; const colTotal = yTotals[y] || 0; const pct = colTotal ? (v/colTotal*100) : 0; td.textContent = `${v}${colTotal? ' (' + pct.toFixed(1) + '%)':''}`; td.style.padding='6px'; td.style.border='1px solid #eee'; td.style.textAlign='center'; td.style.fontSize='12px'; const cellPct = colTotal ? (v/colTotal) : 0; const alpha = 0.12 + 0.72 * (cellPct); td.style.background = `rgba(43,140,196,${alpha})`; td.style.color = cellPct>0.45? '#fff':'#111'; tr.appendChild(td) }
       tbody.appendChild(tr);
     }
     tbl.appendChild(tbody);
@@ -480,7 +480,7 @@
     const title = document.createElement('div'); title.style.fontSize='13px'; title.style.color='var(--muted)'; title.style.margin='6px 0'; title.textContent = `Cross-tab: ${xLabel} × ${yLabel}`;
     container.appendChild(title); container.appendChild(tbl);
     // legend
-    const legend = document.createElement('div'); legend.style.fontSize='12px'; legend.style.color='var(--muted)'; legend.style.marginTop='6px'; legend.textContent = `Cells colored by count (max = ${max}).`;
+    const legend = document.createElement('div'); legend.style.fontSize='12px'; legend.style.color='var(--muted)'; legend.style.marginTop='6px'; legend.textContent = `Cells colored by column-percent (max ≈ ${(maxPct*100).toFixed(1)}%).`;
     container.appendChild(legend);
   }
 

@@ -140,8 +140,12 @@
         const path = m2 ? m2[1] : cleaned;
         const tail = (m2 && m2[2]) ? m2[2] : '';
         const newPath = path.replace(/\.(?:jpe?g|png|gif|webp)$/i, '.jpeg');
-        return '/' + newPath + tail;
+        return PROJECT_BASE + newPath.replace(/^\/+/, '') + tail;
       }
+      // If a full URL points at a host path containing /images/, rewrite to project-root images path
+      // e.g. https://simplylu.github.io/images/... -> PROJECT_BASE + 'images/...'
+      const hostImageMatch = s.match(/^https?:\/\/[^\/]+(\/images\/.*)$/i);
+      if(hostImageMatch){ const imgPath = hostImageMatch[1]; const m3 = imgPath.match(/^(.*?)([?#].*)?$/); const basePath = m3?m3[1]:imgPath; const tail2 = (m3&&m3[2])?m3[2]:''; const newPath2 = basePath.replace(/\.(?:jpe?g|png|gif|webp)$/i, '.jpeg'); return PROJECT_BASE + newPath2.replace(/^\/+/, '') + tail2; }
       // explicitly block remote hosts (wp-content, http, https)
       if(s.startsWith('http:')||s.startsWith('https:')||/wp-content|https?:\/\//i.test(s)) return null;
       // preserve query and fragment when normalizing extension
