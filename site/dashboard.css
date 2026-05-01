@@ -21,3 +21,6 @@ body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica
 .panel.full canvas{height:360px !important}
 
 #map{height:360px}
+
+/* Center the small explanatory note at top of dashboard */
+.dashboard-note{max-width:980px;margin:12px auto;color:var(--muted);font-size:14px;text-align:center}

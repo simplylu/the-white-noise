@@ -29,7 +29,7 @@ Data was collected from an unauthenticated session at whitedate.net. Luckily one
 
 I scraped all the profiles, trying to get as much as information as I could. Then I scraped all the groups, as well as the conversations within that group. After around one day and thousands of requests the data is now complete, as of 01.05.2026 13:37 CET.
 
-A lot of sanitization had to be done, and it is still not perfect, but good enough to lurk a bit through the data, look behind the curtain and play around with the dashboard. 
+A lot of sanitization had to be done, and it is still not perfect, mainly because of the really bad HTML structure of the platform, and the loose requirements on how to fill our information like country (can be DE, Germany, Deutschland, ...), but good enough to lurk a bit through the data, look behind the curtain and play around with the dashboard. 
 
 If you want to work with the data on your own, download `profiles.json` and `groups.json`.
 

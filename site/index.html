@@ -4,6 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>The White Noise — Landing</title>
+  <script>
+  (function(){
+    try{
+      const parts = location.pathname.split('/').filter(Boolean);
+      const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/';
+      window.PROJECT_BASE = project;
+      if(location.hostname && location.hostname.endsWith('github.io')){
+        document.querySelectorAll('link[href], script[src], img[src]').forEach(el=>{
+          ['href','src'].forEach(a=>{ if(el.hasAttribute(a)){ const v=el.getAttribute(a); if(v && v.startsWith('/') && !v.startsWith('//')) el.setAttribute(a, project + v.replace(/^\/+/,'')); }});
+        });
+      }
+    }catch(e){}
+  })();
+  </script>
   <style>
     :root{--bg:#fafafa;--card:#fff;--accent:#2b8cc4;--muted:#666}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#f7f9fb,#eef4f8)}

@@ -1,6 +1,19 @@
 // dashboard.js — loads ../profiles.json and draws interactive charts
 (function(){
-  const profilesUrl = '../profiles.json';
+  // compute project base like other site scripts so GitHub Pages project sites work
+  const PROJECT_BASE = (window.PROJECT_BASE !== undefined) ? window.PROJECT_BASE : (function(){
+    try{ if(location.hostname && location.hostname.endsWith('github.io')){ const parts = location.pathname.split('/').filter(Boolean); if(parts.length>0) return '/' + parts[0] + '/'; } }catch(e){}
+    return '/';
+  })();
+
+  // resolve profiles.json from several likely locations (local first, then project-root)
+  async function resolveProfilesJson(){
+    const candidates = ['profiles.json','../profiles.json', PROJECT_BASE + 'profiles.json', PROJECT_BASE + 'site/profiles.json'];
+    for(const c of candidates){
+      try{ const r = await fetch(c, {cache:'no-store'}); if(r.ok) return c; }catch(e){}
+    }
+    return null;
+  }
   const CHARTS = {};
   let rawProfiles = [];
   let filtered = [];
@@ -355,7 +368,9 @@
   }
 
   // initial boot
-  function init(){
+  async function init(){
+    const profilesUrl = await resolveProfilesJson();
+    if(!profilesUrl){ console.error('profiles.json not found in expected locations'); document.body.insertAdjacentHTML('beforeend','<div style="color:red;padding:12px">profiles.json not found</div>'); return; }
     fetch(profilesUrl).then(r=>r.json()).then(data=>{
       // normalize array
       rawProfiles = Array.isArray(data)?data:(data.profiles||[]);
