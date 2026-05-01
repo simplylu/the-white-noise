@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dataset Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  
+</head>
+<body>
+  <header>
+    <div class="branding">
+      <div class="logo"><img src="logo.png" alt="logo"/></div>
+      <div class="title">
+        <h1>Profiles Analysis Dashboard</h1>
+        <div class="subtitle">Visual summaries from the flattened profiles dataset</div>
+      </div>
+    </div>
+    <div class="controls">
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="groups.html">Groups</a>
+        <a href="profiles.html">Profiles</a>
+        <a href="dashboard.html">Analytics</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="dashboard-note" style="margin:12px 16px;color:var(--muted);font-size:14px">Not every profile has filled out every information, which is why numbers differ from diagram to diagram.</div>
+
+  <div id="matrix-controls" style="padding:8px 16px;text-align:center;">
+    <div style="font-size:13px;color:var(--muted);margin:6px auto 10px;max-width:980px">Select two fields to generate a cross-tab matrix showing counts and column-percentages. Not every profile fills every field, so values may differ between charts.</div>
+    <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+      <label style="font-size:13px;color:var(--muted);">X:</label>
+      <select id="matrixX" style="min-width:180px;padding:6px"></select>
+      <label style="font-size:13px;color:var(--muted);">Y:</label>
+      <select id="matrixY" style="min-width:180px;padding:6px"></select>
+      <button id="matrixRender" style="padding:6px 10px">Render matrix</button>
+      <div id="matrixInfo" style="margin-left:8px;color:var(--muted);font-size:13px"></div>
+    </div>
+  </div>
+
+  <div id="matrixContainer" style="padding:0 16px 12px 16px;"></div>
+
+  <main class="dash-grid">
+    <!-- Row 1 -->
+    <section class="panel"><h2>Top 10 Countries</h2><div style="font-size:13px;color:var(--muted)">Most frequent country values in `profiles.json`.</div><canvas id="countriesChart"></canvas></section>
+    <section class="panel"><h2>Age Distribution</h2><div style="font-size:13px;color:var(--muted)">Histogram of reported ages.</div><canvas id="ageChart"></canvas></section>
+
+    <!-- Row 2 -->
+    <section class="panel"><h2>Gender Distribution</h2><div style="font-size:13px;color:var(--muted)">Counts by gender field.</div><canvas id="genderChart"></canvas></section>
+    <section class="panel"><h2>Verified</h2><div style="font-size:13px;color:var(--muted)">Profiles flagged as verified / not verified.</div><canvas id="verifiedChart"></canvas></section>
+
+    <!-- Row 3 -->
+    <section class="panel"><h2>Open to Polygyny</h2><div style="font-size:13px;color:var(--muted)">Distribution of `open_to_polygyny` / similar flags.</div><canvas id="openPolygynyChart"></canvas></section>
+    <section class="panel"><h2>Tattoos</h2><div style="font-size:13px;color:var(--muted)">Has tattoos / no tattoos counts.</div><canvas id="tattoosChart"></canvas></section>
+
+    <!-- Row 4 -->
+    <section class="panel"><h2>Virginity</h2><div style="font-size:13px;color:var(--muted)">Reported virgin / not.</div><canvas id="virginityChart"></canvas></section>
+    <section class="panel"><h2>Human Design Type</h2><div style="font-size:13px;color:var(--muted)">Categorical breakdown (if available).</div><canvas id="humanDesignChart"></canvas></section>
+
+    <!-- Row 5 -->
+    <section class="panel"><h2>Human Phenotype</h2><div style="font-size:13px;color:var(--muted)">Phenotype categories.</div><canvas id="humanPhenotypeChart"></canvas></section>
+    <section class="panel"><h2>Piercings</h2><div style="font-size:13px;color:var(--muted)">Has piercings / none.</div><canvas id="piercingsChart"></canvas></section>
+
+    <!-- Row 6 -->
+    <section class="panel"><h2>Smoking</h2><div style="font-size:13px;color:var(--muted)">Smoker / non-smoker counts.</div><canvas id="smokingChart"></canvas></section>
+    <section class="panel"><h2>Eye Color</h2><div style="font-size:13px;color:var(--muted)">Distribution of eye color.</div><canvas id="eyecolorChart"></canvas></section>
+
+    <!-- Row 7 -->
+    <section class="panel"><h2>Children</h2><div style="font-size:13px;color:var(--muted)">Has children / none.</div><canvas id="childrenChart"></canvas></section>
+    <section class="panel"><h2>IQ (bucketed)</h2><div style="font-size:13px;color:var(--muted)">Reported IQ, bucketed.</div><canvas id="iqChart"></canvas></section>
+
+    <!-- Row 8 -->
+    <section class="panel"><h2>Accommodation</h2><div style="font-size:13px;color:var(--muted)">Accommodation / housing type.</div><canvas id="accommodationChart"></canvas></section>
+    <section class="panel"><h2>Education</h2><div style="font-size:13px;color:var(--muted)">Highest education level distribution.</div><canvas id="educationChart"></canvas></section>
+
+    <!-- Row 9 -->
+    <section class="panel"><h2>Vaccination Stance</h2><div style="font-size:13px;color:var(--muted)">Pro/anti/undecided on vaccination.</div><canvas id="vaccinationChart"></canvas></section>
+    <section class="panel"><h2>Body Type</h2><div style="font-size:13px;color:var(--muted)">Reported body type categories.</div><canvas id="bodyTypeChart"></canvas></section>
+
+    <!-- Row 10 -->
+    <section class="panel"><h2>Marital Status</h2><div style="font-size:13px;color:var(--muted)">Single / married / divorced etc.</div><canvas id="maritalChart"></canvas></section>
+    <section class="panel"><h2>Income</h2><div style="font-size:13px;color:var(--muted)">Income brackets.</div><canvas id="incomeChart"></canvas></section>
+
+    <!-- Row 11 -->
+    <section class="panel"><h2>Pets</h2><div style="font-size:13px;color:var(--muted)">Has pets / none / types.</div><canvas id="petsChart"></canvas></section>
+    <section class="panel"><h2>Best Features</h2><div style="font-size:13px;color:var(--muted)">Top self-reported best features (text tags).</div><canvas id="bestFeaturesChart"></canvas></section>
+
+    <!-- Row 12 -->
+    <section class="panel"><h2>Diet</h2><div style="font-size:13px;color:var(--muted)">Dietary preference distribution.</div><canvas id="dietChart"></canvas></section>
+    <section class="panel"><h2>Astrological Sign</h2><div style="font-size:13px;color:var(--muted)">Zodiac sign distribution.</div><canvas id="astroChart"></canvas></section>
+
+    <!-- Row 13 -->
+    <section class="panel"><h2>Membership</h2><div style="font-size:13px;color:var(--muted)">Membership level / premium flags.</div><canvas id="membershipChart"></canvas></section>
+    <section class="panel"><h2>Spirituality</h2><div style="font-size:13px;color:var(--muted)">Spiritual / religious orientation.</div><canvas id="spiritualityChart"></canvas></section>
+
+    <!-- Row 14 -->
+    <section class="panel"><h2>Meyers–Briggs</h2><div style="font-size:13px;color:var(--muted)">MBTI distribution.</div><canvas id="myersBriggsChart"></canvas></section>
+    <section class="panel"><h2>Hair</h2><div style="font-size:13px;color:var(--muted)">Hair color / length categories.</div><canvas id="hairChart"></canvas></section>
+
+    <!-- Row 15 -->
+    <section class="panel"><h2>Political Orientation</h2><div style="font-size:13px;color:var(--muted)">Self-reported political alignment.</div><canvas id="politicalChart"></canvas></section>
+    <section class="panel"><h2>Mindset</h2><div style="font-size:13px;color:var(--muted)">Tags like conservative, traditional, progressive etc.</div><canvas id="mindsetChart"></canvas></section>
+
+    <!-- Row 16 -->
+    <section class="panel full"><h2>Interests (Top 30)</h2><div style="font-size:13px;color:var(--muted)">Top interest tags across profiles.</div><canvas id="interestsChart"></canvas></section>
+
+    <!-- geographic panel removed per request -->
+  </main>
+
+  <footer class="dash-footer">Data loaded from <code>profiles.json</code>. Use filters to slice data.</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet JS removed per request -->
+  <script src="dashboard.js?v=2"></script>
+</body>
+</html>

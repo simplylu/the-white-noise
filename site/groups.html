@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Groups — The White Noise</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .backlinks{display:flex;gap:8px;align-items:center;margin-left:12px}
+    .topic-list{margin-top:12px}
+    .topic-item{padding:10px;border-radius:8px;border:1px solid #f6e6ec;margin-bottom:8px;background:#fff}
+    .topic-item a{color:var(--accent);text-decoration:none;font-weight:600}
+    .meta-line{color:var(--muted);font-size:13px;margin-top:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="branding">
+      <div class="logo"><img src="logo.png" alt="logo"/></div>
+      <div class="title">
+        <h1>The White Noise</h1>
+        <div class="subtitle">Behind the curtain of whitedate.net</div>
+      </div>
+    </div>
+    <div class="controls">
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="groups.html">Groups</a>
+        <a href="profiles.html">Profiles</a>
+        <a href="dashboard.html">Analytics</a>
+      </nav>
+      <div class="page-controls">
+        <input id="search" placeholder="Search groups (case-insensitive, anywhere in JSON)" />
+        <button id="clear">Clear</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <aside id="results">
+      <div id="resultsCount"></div>
+      <ul id="list"></ul>
+    </aside>
+
+    <section id="detail">
+      <div id="detailInner">
+        <div id="detailHeader"><h2 id="detailName"></h2><div id="detailMeta"></div></div>
+        <div id="groupImage"></div>
+        <div id="groupHeader" style="margin-top:12px"></div>
+        <div id="groupInfo" style="margin-top:12px"></div>
+        <h3 style="margin-top:18px">Topics</h3>
+        <div id="topics" class="topic-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <template id="listItemTpl">
+    <li class="item">
+      <img class="thumb" src="" alt="thumb"/>
+      <div class="meta">
+        <div class="title"></div>
+        <div class="sub"></div>
+      </div>
+    </li>
+  </template>
+
+  <script src="groups.js"></script>
+</body>
+</html>

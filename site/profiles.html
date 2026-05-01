@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The White Noise</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="branding">
+      <div class="logo"><img src="logo.png" alt="logo"/></div>
+      <div class="title">
+        <h1>The White Noise</h1>
+        <div class="subtitle">Behind the curtain of whitedate.net</div>
+      </div>
+    </div>
+    <div class="controls">
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="groups.html">Groups</a>
+        <a href="profiles.html">Profiles</a>
+        <a href="dashboard.html">Analytics</a>
+      </nav>
+      <div class="page-controls">
+        <input id="search" placeholder="Search profiles (name, city, country, membership, interests...)" />
+        <button id="clear">Clear</button>
+        <button id="showAll">Show all</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <aside id="results">
+      <div id="filters"></div>
+      <div id="resultsCount"></div>
+      <ul id="list"></ul>
+    </aside>
+
+    <section id="detail">
+      <div id="detailInner">
+        <div id="detailHeader"><h2 id="detailName"></h2><div id="detailMeta"></div></div>
+        <div id="gallery"></div>
+        <div id="fields"></div>
+        <div id="groups"></div>
+      </div>
+    </section>
+  </main>
+
+  <template id="listItemTpl">
+    <li class="item">
+      <img class="thumb" src="" alt="thumb"/>
+      <div class="meta">
+        <div class="title"></div>
+        <div class="sub"></div>
+      </div>
+    </li>
+  </template>
+
+  <!-- Image modal for fullscreen preview -->
+  <div id="imgModal" class="img-modal" aria-hidden="true">
+    <div class="img-modal-backdrop" data-action="close"></div>
+    <div class="img-modal-inner">
+      <button class="img-modal-close" aria-label="Close image">✕</button>
+      <img id="imgModalImg" src="" alt="" />
+      <div id="imgModalCaption" class="img-modal-caption"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
