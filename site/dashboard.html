@@ -110,6 +110,12 @@
     <!-- geographic panel removed per request -->
   </main>
 
+  <section class="panel full" style="padding:12px 16px 24px 16px;">
+    <h2>Registrations Over Time</h2>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Monthly registrations (bars) with cumulative registrations (line). Invalid or missing dates are ignored.</div>
+    <div style="height:320px;"><canvas id="registrationsChart"></canvas></div>
+  </section>
+
   <footer class="dash-footer">Data loaded from <code>profiles.json</code>. Use filters to slice data.</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

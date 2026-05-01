@@ -22,7 +22,7 @@
 
   // No filters for now — render using entire dataset
 
-  function renderAll(){ renderAge(); renderGender(); renderJoin(); renderInterests(); renderAboutWords(); renderHeightWeight(); renderExtraMetrics(); }
+  function renderAll(){ renderAge(); renderGender(); renderJoin(); renderRegistrations(); renderInterests(); renderAboutWords(); renderHeightWeight(); renderExtraMetrics(); }
 
   // helper to get first available field from candidates
   function getField(p, keys){ for(const k of keys){ if(k in p && p[k]!==undefined && p[k]!==null) return p[k]; } return undefined }
@@ -95,6 +95,45 @@
     dates.forEach(dt=>{ const key = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'); byMonth[key]=(byMonth[key]||0)+1 });
     const labels = Object.keys(byMonth).sort(); const data = labels.map(l=>byMonth[l]);
     drawLine('joinChart', labels, data, 'Join timeline');
+  }
+
+  // Registrations over time (robust detection across many possible date fields)
+  function renderRegistrations(){
+    const dateKeys = ['joined','join_date','joined_date','registration_date','registered','created_at','created','signup_date','date_joined','member_since','registered_on'];
+    const dates = [];
+    for(const p of filtered){
+      let found = null;
+      for(const k of dateKeys){ if(k in p && p[k]){ found = p[k]; break } }
+      if(!found) continue;
+      // try parsing
+      try{
+        const raw = found;
+        let ts = null;
+        if(typeof raw === 'number') ts = raw;
+        else if(typeof raw === 'string'){
+          const s = raw.trim();
+          // ignore values that are clearly not dates
+          if(!s) continue;
+          // try ISO parse
+          const parsed = Date.parse(s);
+          if(!isNaN(parsed)) ts = parsed;
+          else {
+            // try extracting yyyy-mm-dd like substring
+            const m = s.match(/(20\d{2}|19\d{2})[-\/.](0[1-9]|1[0-2])[-\/.](0[1-9]|[12][0-9]|3[01])/);
+            if(m) ts = Date.parse(m[0]);
+          }
+        }
+        if(ts && !isNaN(ts)) dates.push(new Date(ts));
+      }catch(e){}
+    }
+    if(!dates.length) return clearChart('registrationsChart');
+    const byMonth = {};
+    dates.forEach(dt=>{ const key = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'); byMonth[key]=(byMonth[key]||0)+1 });
+    const labels = Object.keys(byMonth).sort();
+    const counts = labels.map(l=>byMonth[l]);
+    // cumulative
+    const cumulative = []; let s=0; for(const v of counts){ s+=v; cumulative.push(s); }
+    drawRegistrations('registrationsChart', labels, counts, cumulative);
   }
 
   function renderInterests(){
@@ -284,6 +323,32 @@
             ctx.restore();
           }
         }
+      }
+    };
+    CHARTS[id] = new Chart(ctx, cfg);
+  }
+
+  function drawRegistrations(id, labels, counts, cumulative){
+    clearChart(id);
+    const ctx = getCtx(id); if(!ctx) return;
+    const cfg = {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { type: 'bar', label: 'Monthly registrations', data: counts, backgroundColor: 'rgba(43,140,196,0.85)', yAxisID: 'y' },
+          { type: 'line', label: 'Cumulative', data: cumulative, borderColor: 'rgba(220,80,80,0.9)', backgroundColor: 'rgba(220,80,80,0.12)', fill: false, yAxisID: 'y1', tension: 0.2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true } },
+        scales: {
+          y: { beginAtZero: true, position: 'left', title: { display: true, text: 'Monthly' } },
+          y1: { beginAtZero: true, position: 'right', grid: { display: false }, title: { display: true, text: 'Cumulative' } }
+        },
+        animation: { duration: 600 }
       }
     };
     CHARTS[id] = new Chart(ctx, cfg);

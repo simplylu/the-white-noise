@@ -1,5 +1,10 @@
 // groups.js — loads groups_with_messages.json and renders searchable groups list + detail
 (async function(){
+  // determine project base so absolute app-local paths work on GitHub Pages project sites
+  const PROJECT_BASE = (window.PROJECT_BASE !== undefined) ? window.PROJECT_BASE : (function(){
+    try{ if(location.hostname && location.hostname.endsWith('github.io')){ const parts = location.pathname.split('/').filter(Boolean); if(parts.length>0) return '/' + parts[0] + '/'; } }catch(e){}
+    return '/';
+  })();
   const el = (s,ctx=document) => ctx.querySelector(s);
   const listEl = el('#list'); const liTpl = el('#listItemTpl').content;
   const searchInput = el('#search'); const clearBtn = el('#clear'); const resultsCount = el('#resultsCount');
@@ -9,7 +14,7 @@
   function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
   // find groups_with_messages.json in several possible locations
-  async function findJson(){ const cand = ['groups.json','../groups.json','/groups.json']; for(const c of cand){ try{ const r = await fetch(c,{cache:'no-store'}); if(r.ok) return c;}catch(e){} } return null; }
+  async function findJson(){ const cand = ['groups.json','../groups.json', PROJECT_BASE + 'groups.json', PROJECT_BASE + 'site/groups.json']; for(const c of cand){ try{ const r = await fetch(c,{cache:'no-store'}); if(r.ok) return c;}catch(e){} } return null; }
   const jsonUrl = await findJson(); if(!jsonUrl){ listEl.innerHTML = '<li>No groups JSON found (groups.json)</li>'; return; }
   const resp = await fetch(jsonUrl); const groups = await resp.json();
 
@@ -21,14 +26,48 @@
     if(!raw) return '';
     raw = String(raw).trim();
     if(raw.startsWith('//')) return 'https:' + raw;
+    if(raw.startsWith('/')){
+      // local app paths need PROJECT_BASE prefix
+      if(raw.startsWith('/images/') || raw.startsWith('/site/') || raw.startsWith('/profiles') || raw.startsWith('/media')){
+        return PROJECT_BASE + raw.replace(/^\/+/, '');
+      }
+      return '';
+    }
     return raw;
+  }
+
+  // profiles cache and loader (used to find members of a group)
+  let profilesCache = null;
+  async function loadProfiles(){
+    if(profilesCache) return profilesCache;
+    const candidates = ['profiles.json','../profiles.json', PROJECT_BASE + 'profiles.json', PROJECT_BASE + 'site/profiles.json'];
+    for(const c of candidates){
+      try{ const r = await fetch(c,{cache:'no-store'}); if(r.ok){ const data = await r.json(); const profiles = data.profiles || data || []; profilesCache = Array.isArray(profiles) ? profiles : []; return profilesCache; } }catch(e){}
+    }
+    profilesCache = [];
+    return profilesCache;
+  }
+
+  function slugifyName(s){ if(!s) return ''; return String(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,'-'); }
+
+  // create a profile slug similar to app.js makeHashId (simple deterministic slug)
+  function makeProfileSlug(p, idx){
+    let base = '';
+    const tryFields = ['username','handle','user','screen_name','profile_name','id'];
+    for(const k of tryFields){ if(p[k] && String(p[k]).trim()){ base = String(p[k]).trim(); break; } }
+    if(!base){ const url = p.url || p.profile_url || p.profile || ''; if(url && String(url).trim()){ try{ const u = new URL(String(url)); const segs = u.pathname.split('/').filter(Boolean); if(segs.length) base = segs[segs.length-1]; else base = u.hostname.replace(/^www\./,''); }catch(e){ base = String(url); } } }
+    if(!base) base = p.display_name || p.name || 'profile';
+    base = String(base);
+    base = base.replace(/\.[a-z0-9]{1,5}$/i,'').replace(/[^a-z0-9-_]+/ig,'-').replace(/(^-|-$)/g,'');
+    let slug = base.toLowerCase(); if(!slug) slug = 'profile-' + String(idx||0);
+    return slug;
   }
 
   function chooseGroupImage(g){
     // prefer local `img` or `image` or `avatar`, then `header`
     const candidates = [g.img, g.image, g.avatar, g.header];
     for(const c of candidates){ if(c && String(c).trim()) return resolveImgUrl(c); }
-    return '/images/group.png';
+    return PROJECT_BASE + 'images/group.png';
   }
 
   function renderList(items){ listEl.innerHTML=''; resultsCount.textContent = `${items.length} groups`; for(const g of items){ const node = liTpl.cloneNode(true); const li = node.querySelector('li'); const img = node.querySelector('.thumb'); const title = node.querySelector('.title'); const sub = node.querySelector('.sub'); const rawImg = chooseGroupImage(g);
@@ -105,12 +144,12 @@
 
   function doSearch(){ const q = (searchInput.value||'').trim().toLowerCase(); if(!q){ renderList(groups); if(groups.length) showDetail(groups[0]); return; } renderSearchResults(q); }
 
-  function showDetail(g){ const q = (searchInput.value||'').trim(); el('#detailName').textContent = g.name || 'Group'; const meta = []; if(g.members) meta.push(g.members + ' members'); if(g.privacy) meta.push(g.privacy); if(g.last_activity) meta.push('Last activity: ' + g.last_activity); meta.push((g.topics? g.topics.length : 0) + ' topics'); el('#detailMeta').textContent = meta.join(' • ');
+  async function showDetail(g){ const q = (searchInput.value||'').trim(); el('#detailName').textContent = g.name || 'Group'; const meta = []; if(g.members) meta.push(g.members + ' members'); if(g.privacy) meta.push(g.privacy); if(g.last_activity) meta.push('Last activity: ' + g.last_activity); meta.push((g.topics? g.topics.length : 0) + ' topics'); el('#detailMeta').textContent = meta.join(' • ');
     // image + header: banner + avatar
     const headerWrap = el('#groupImage'); headerWrap.innerHTML = '';
     const bannerUrl = resolveImgUrl(g.header) || '';
-    const avatarUrl = resolveImgUrl(g.img || g.image || g.avatar) || bannerUrl || '/images/group.png';
-    const banner = document.createElement('img'); banner.className = 'banner-img'; banner.src = bannerUrl || '/images/group-header.png';
+    const avatarUrl = resolveImgUrl(g.img || g.image || g.avatar) || bannerUrl || (PROJECT_BASE + 'images/group.png');
+    const banner = document.createElement('img'); banner.className = 'banner-img'; banner.src = bannerUrl || (PROJECT_BASE + 'images/group-header.png');
     const avatar = document.createElement('img'); avatar.className = 'thumb-large'; avatar.src = avatarUrl;
     headerWrap.appendChild(banner);
     headerWrap.appendChild(avatar);
@@ -130,6 +169,40 @@
       d.appendChild(meta);
       topicsWrap.appendChild(d);
     });
+    // Members: find profiles that reference this group
+    const membersWrap = el('#groupMembers'); if(membersWrap){ membersWrap.innerHTML = ''; const profiles = await loadProfiles(); if(profiles.length){ const gName = (g.name||'').toString(); const gSlug = slugifyName(gName);
+        const matches = [];
+        for(let i=0;i<profiles.length;i++){
+          const p = profiles[i]; if(!p) continue;
+          const groupsField = p.groups || p.group || p.memberships || [];
+          let found = false;
+          if(typeof groupsField === 'string'){ if(slugifyName(groupsField) === gSlug) found = true; }
+          else if(Array.isArray(groupsField)){
+            for(const gi of groupsField){
+              let cand = '';
+              if(typeof gi === 'string') cand = gi;
+              else if(gi && (gi.name||gi.title||gi.text)) cand = gi.name||gi.title||gi.text;
+              if(cand && slugifyName(cand) === gSlug){ found = true; break; }
+            }
+          } else if(typeof groupsField === 'object'){
+            const cand = groupsField.name || groupsField.title || groupsField.text || '';
+            if(cand && slugifyName(cand) === gSlug) found = true;
+          }
+          if(found) matches.push({p,i});
+          if(matches.length >= 200) break; // avoid huge lists
+        }
+        if(matches.length===0){ membersWrap.innerHTML = '<div style="color:var(--muted);font-size:13px">No members found in profiles.json.</div>'; }
+        else {
+          const list = document.createElement('div'); list.style.display='flex'; list.style.flexWrap='wrap'; list.style.gap='8px';
+          matches.forEach(({p,i})=>{
+            const name = p.display_name || p.name || p.username || p.handle || ('profile ' + (i+1));
+            const slug = makeProfileSlug(p,i);
+            const a = document.createElement('a'); a.href = 'profiles.html#' + encodeURIComponent(slug); a.textContent = name; a.className = 'group-pill'; a.style.display='inline-block'; a.style.margin='2px';
+            list.appendChild(a);
+          });
+          membersWrap.appendChild(list);
+        }
+      } else { membersWrap.innerHTML = '<div style="color:var(--muted);font-size:13px">No profiles.json found or it is empty.</div>'; } }
     // highlight selected in list
     const prev = listEl.querySelector('.selected'); if(prev) prev.classList.remove('selected'); try{ const esc = (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(g._hashId) : g._hashId; const node = listEl.querySelector(`li[data-hash-id="${esc}"]`); if(node) node.classList.add('selected'); }catch(e){}
   }

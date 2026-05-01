@@ -1,5 +1,15 @@
 // Client-side app: load profiles and provide search + detail view
 (async function(){
+  // compute project base (handles GitHub Pages project sites)
+  const PROJECT_BASE = (window.PROJECT_BASE !== undefined) ? window.PROJECT_BASE : (function(){
+    try{
+      if(location.hostname && location.hostname.endsWith('github.io')){
+        const parts = location.pathname.split('/').filter(Boolean);
+        if(parts.length>0) return '/' + parts[0] + '/';
+      }
+    }catch(e){}
+    return '/';
+  })();
   try{
   const el = (sel, ctx=document) => ctx.querySelector(sel);
   const liTpl = el('#listItemTpl').content;
@@ -11,11 +21,12 @@
 
   // try normalized file first
   const profilesUrl = await (async ()=>{
-    // try local, parent, and root locations so server can be started from repo root
+    // try local, parent, and project-root locations so server can be started from repo root or deployed under a GitHub Pages project slug
     const candidates = [
       'profiles.json',
       '../profiles.json',
-      '/profiles.json'
+      PROJECT_BASE + 'profiles.json',
+      PROJECT_BASE + 'site/profiles.json'
     ];
     for(const c of candidates){
       try{ let r = await fetch(c,{cache:'no-store'}); if(r.ok) return c;}catch(e){}
@@ -119,7 +130,7 @@
           const path = m ? m[1] : s;
           const tail = (m && m[2]) ? m[2] : '';
           const newPath = path.replace(/\.(?:jpe?g|png|gif|webp)$/i, '.jpeg');
-          return newPath + tail;
+          return (PROJECT_BASE + newPath.replace(/^\/+/, '')) + tail;
         }
         return null;
       }
@@ -139,7 +150,7 @@
       const tail = (m && m[2]) ? m[2] : '';
       const cleaned = path.replace(/^\.\/?|^site\//,'').replace(/^\/+/, '');
       const normalized = cleaned.replace(/\.(?:jpe?g|png|gif|webp)$/i, '.jpeg');
-      return '/' + normalized + tail;
+      return PROJECT_BASE + normalized + tail;
     }catch(e){ return null; }
   }
 
@@ -202,7 +213,7 @@
       const title = node.querySelector('.title');
       const sub = node.querySelector('.sub');
       const rawImg = (p.image && String(p.image).trim()) ? p.image : 'images/profile.png';
-      img.src = normalizeImageUrl(rawImg) || '/images/profile.png';
+      img.src = normalizeImageUrl(rawImg) || (PROJECT_BASE + 'images/profile.png');
       const handle = getHandle(p);
       const display = p.display_name || p.name || '';
       if(handle){
@@ -243,14 +254,14 @@
     if(res.length>0) showDetail(res[0]);
   }
 
-  function showDetail(p){
+  async function showDetail(p){
     // Hero area (big image + summary)
     const q = searchInput.value.trim();
     const aboutText = firstAboutText(p) || '';
     // normalize and dedupe media images; only keep local images
     const mediaNorm = (p.media_images||[]).map(normalizeImageUrl).filter(x=>x);
     const media = Array.from(new Set(mediaNorm));
-    const heroImg = media.length ? media[0] : (normalizeImageUrl(p.image) || '/images/profile.png');
+    const heroImg = media.length ? media[0] : (normalizeImageUrl(p.image) || (PROJECT_BASE + 'images/profile.png'));
     const handle = getHandle(p);
     const display = p.display_name || p.name || '';
     const handleHtml = handle ? `<span class="handle">@${escapeHtml(handle)}</span>, ` : '';
@@ -272,7 +283,7 @@
       const items = rawMedia.map(raw => {
         const candidateFull = deriveFullUrl(raw) || raw;
         const full = normalizeImageUrl(candidateFull) || normalizeImageUrl(raw) || null;
-        const thumb = normalizeImageUrl(raw) || full || '/images/profile.png';
+        const thumb = normalizeImageUrl(raw) || full || (PROJECT_BASE + 'images/profile.png');
         return {full,thumb, raw};
       }).filter(it => it.full || it.thumb);
       const controls = document.createElement('div'); controls.className='gallery-controls centered';
@@ -280,7 +291,7 @@
       const counter = document.createElement('div'); counter.className='gcount'; counter.textContent = `1 / ${items.length}`;
       const next = document.createElement('button'); next.className='gbtn'; next.textContent='▶';
       let idx = 0;
-      function setIndex(i){ idx = (i+items.length)%items.length; const hero = el('#heroMainImg'); if(hero) hero.src = items[idx].full || items[idx].thumb || '/images/profile.png'; counter.textContent = `${idx+1} / ${items.length}`; }
+      function setIndex(i){ idx = (i+items.length)%items.length; const hero = el('#heroMainImg'); if(hero) hero.src = items[idx].full || items[idx].thumb || (PROJECT_BASE + 'images/profile.png'); counter.textContent = `${idx+1} / ${items.length}`; }
       prev.addEventListener('click', ()=> setIndex(idx-1)); next.addEventListener('click', ()=> setIndex(idx+1));
       controls.appendChild(prev); controls.appendChild(counter); controls.appendChild(next);
       // insert controls directly under the hero image so they're visually attached to it
@@ -342,6 +353,83 @@
         a.addEventListener('click', (ev)=>{ ev.stopPropagation(); ev.preventDefault(); location.href = 'groups.html#' + encodeURIComponent(slug); });
         groups.appendChild(a);
       }
+    }
+
+    // Messages posted by this profile (if present)
+    // Support multiple possible key names produced by different scripts
+    const msgKeys = ['messages','sent_messages','posts','topic_posts','sent_posts','messages_sent'];
+    let msgs = null; let foundKey = null;
+    for(const k of msgKeys){ if(p[k] && Array.isArray(p[k]) && p[k].length){ msgs = p[k]; foundKey = k; break; } }
+    if(msgs && msgs.length){
+      const msgsWrap = el('#messages'); msgsWrap.innerHTML = '';
+      const mh = document.createElement('h3'); mh.textContent = 'Messages'; msgsWrap.appendChild(mh);
+      const note = document.createElement('div'); note.style.fontSize='13px'; note.style.color='var(--muted)'; note.style.marginBottom='8px'; note.textContent = `Showing messages from profile (${foundKey}) — click group or topic to navigate.`; msgsWrap.appendChild(note);
+      // create expandable list
+      for(const m of msgs){
+        const item = document.createElement('div'); item.className = 'message-item'; item.style.borderLeft = '3px solid #eee'; item.style.padding = '8px'; item.style.marginBottom = '8px';
+        // header with group and topic links
+        const header = document.createElement('div'); header.style.fontSize='14px'; header.style.marginBottom='6px';
+        const groupName = m.group || m.group_name || m.groupTitle || m.groupTitle || m.group_name_raw || '';
+        const topicTitle = m.topic || m.topic_title || m.thread || m.title || '';
+        if(groupName){
+          const gslug = String(groupName).replace(/[^a-z0-9\-]+/ig,'-').toLowerCase();
+          const a = document.createElement('a'); a.href = 'groups.html#' + encodeURIComponent(gslug); a.textContent = groupName; a.style.marginRight='8px'; a.addEventListener('click',(ev)=>{ ev.stopPropagation(); });
+          header.appendChild(a);
+        }
+        if(topicTitle){
+          const tlink = document.createElement('a'); tlink.href = 'topic.html?groupName=' + encodeURIComponent(groupName||'') + '&topicTitle=' + encodeURIComponent(topicTitle); tlink.textContent = topicTitle; tlink.style.color='var(--accent)'; tlink.style.marginLeft='6px'; tlink.addEventListener('click',(ev)=>{ ev.stopPropagation(); });
+          header.appendChild(tlink);
+        }
+        item.appendChild(header);
+        // message body
+        const body = document.createElement('div'); body.className='message-body'; body.style.whiteSpace='pre-wrap'; body.style.marginTop='6px';
+        const text = m.message || m.body || m.text || m.content || ''; body.innerHTML = escapeHtml(String(text));
+        item.appendChild(body);
+        msgsWrap.appendChild(item);
+      }
+    } else {
+      // if no messages on the profile object, attempt to find authored messages in groups.json
+      try{
+        const groups = await loadGroups();
+        if(Array.isArray(groups) && groups.length){
+          const handle = (getHandle(p) || '').toLowerCase();
+          const usernames = new Set();
+          if(p.username) usernames.add(String(p.username).toLowerCase());
+          if(p.handle) usernames.add(String(p.handle).toLowerCase());
+          if(handle) usernames.add(handle);
+          const display = (p.display_name || p.name || '').toLowerCase();
+          const found = [];
+          for(const g of groups){
+            const gName = g && (g.name||g.title||'') || '';
+            const topics = g && g.topics || [];
+            for(let ti=0; ti<topics.length; ti++){
+              const t = topics[ti]; if(!t) continue;
+              const msgsArr = Array.isArray(t.messages) ? t.messages : [];
+              for(const m of msgsArr){
+                if(!m) continue;
+                const mu = (m.username||'').toLowerCase(); const an = (m.author_name||'').toLowerCase(); const al = (m.author_link||'');
+                let matched = false;
+                if(mu && usernames.has(mu)) matched = true;
+                else if(mu && display && mu === display) matched = true;
+                else if(an && display && an === display) matched = true;
+                else if(al && p.url && String(p.url).length && al.indexOf(p.url)!==-1) matched = true;
+                if(matched){
+                  found.push({groupName: gName, topicTitle: t.title||'', message: m, groupIdx:null, topicIdx: null});
+                  if(found.length >= 200) break;
+                }
+              }
+              if(found.length >= 200) break;
+            }
+            if(found.length >= 200) break;
+          }
+          if(found.length){
+            const msgsWrap2 = el('#messages'); msgsWrap2.innerHTML = '';
+            const mh2 = document.createElement('h3'); mh2.textContent = 'Messages (found in groups)'; msgsWrap2.appendChild(mh2);
+            const note2 = document.createElement('div'); note2.style.fontSize='13px'; note2.style.color='var(--muted)'; note2.style.marginBottom='8px'; note2.textContent = `Found ${found.length} message(s) in groups.json — click group or topic to navigate.`; msgsWrap2.appendChild(note2);
+            for(const it of found){ const m = it.message; const item = document.createElement('div'); item.className='message-item'; item.style.borderLeft = '3px solid #eee'; item.style.padding = '8px'; item.style.marginBottom = '8px'; const header = document.createElement('div'); header.style.fontSize='14px'; header.style.marginBottom='6px'; if(it.groupName){ const gslug = slugifyName(it.groupName); const a = document.createElement('a'); a.href = 'groups.html#' + encodeURIComponent(gslug); a.textContent = it.groupName; a.style.marginRight='8px'; a.addEventListener('click',(ev)=>{ ev.stopPropagation(); }); header.appendChild(a); } if(it.topicTitle){ const tlink = document.createElement('a'); tlink.href = 'topic.html?groupName=' + encodeURIComponent(it.groupName||'') + '&topicTitle=' + encodeURIComponent(it.topicTitle); tlink.textContent = it.topicTitle; tlink.style.color='var(--accent)'; tlink.style.marginLeft='6px'; tlink.addEventListener('click',(ev)=>{ ev.stopPropagation(); }); header.appendChild(tlink); } item.appendChild(header); const body = document.createElement('div'); body.className='message-body'; body.style.whiteSpace='pre-wrap'; body.style.marginTop='6px'; const text = m.message || m.body || m.text || m.content || ''; body.innerHTML = escapeHtml(String(text)); item.appendChild(body); msgsWrap2.appendChild(item); }
+          }
+        }
+      }catch(e){/* ignore errors */}
     }
 
     // mark selected item in the list (and scroll into view)
@@ -454,6 +542,20 @@
     }
     return true;
   }
+
+  // load groups.json (project-aware) and cache
+  let _groupsCache = null;
+  async function loadGroups(){
+    if(_groupsCache) return _groupsCache;
+    const candidates = ['groups.json','../groups.json', PROJECT_BASE + 'groups.json', PROJECT_BASE + 'site/groups.json'];
+    for(const c of candidates){
+      try{ const r = await fetch(c,{cache:'no-store'}); if(r.ok){ const data = await r.json(); _groupsCache = Array.isArray(data) ? data : (data.groups || data); return _groupsCache; } }catch(e){}
+    }
+    _groupsCache = [];
+    return _groupsCache;
+  }
+
+  function slugifyName(s){ if(!s) return ''; return String(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,'-'); }
 
   if(keyUrl){
     try{

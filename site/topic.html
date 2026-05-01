@@ -61,6 +61,21 @@
     if(!topic && topicUrl){ // search by topic_url
       for(let gi=0;gi<all.length;gi++){ const g = all[gi]; const ts = g.topics||[]; for(let ti=0;ti<ts.length;ti++){ if(ts[ti].topic_url === topicUrl){ group=g; topic=ts[ti]; gIndex=gi; tIndex=ti; break; } } if(topic) break; }
     }
+    // If not found yet, try resolving by groupName + topicTitle query parameters (GitHub Pages friendly links)
+    if(!topic){
+      const groupNameParam = qs('groupName'); const topicTitleParam = qs('topicTitle');
+      if(groupNameParam && topicTitleParam){
+        const gNameLc = String(groupNameParam).toLowerCase(); const tTitleLc = String(topicTitleParam).toLowerCase();
+        for(let gi=0;gi<all.length;gi++){
+          const g = all[gi]; if(!g) continue; const name = (g.name||'').toLowerCase(); if(!name.includes(gNameLc)) continue;
+          const ts = g.topics||[];
+          for(let ti=0;ti<ts.length;ti++){
+            const tt = (ts[ti].title||'').toLowerCase(); if(tt.includes(tTitleLc) || tTitleLc.includes(tt)) { group=g; topic=ts[ti]; gIndex=gi; tIndex=ti; break; }
+          }
+          if(topic) break;
+        }
+      }
+    }
     if(!topic){ document.getElementById('topicContainer').innerHTML = '<div style="padding:24px">Topic not found</div>'; return; }
     const qParam = qs('q');
     document.getElementById('topicTitle').textContent = topic.title || 'Topic';
@@ -76,7 +91,6 @@
     const back = document.getElementById('backToGroup');
     const groupHash = group && group.name ? encodeURIComponent(group.name.replace(/\s+/g,'-').toLowerCase()) : '';
     // preserve search query when navigating back
-    const qParam = qs('q');
     back.href = 'groups.html' + (qParam ? ('?q=' + encodeURIComponent(qParam)) : '') + (groupHash ? ('#' + groupHash) : '');
 
     const container = document.getElementById('topicMessages'); container.innerHTML = '';
