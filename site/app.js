@@ -280,6 +280,8 @@
   async function showDetail(p){
     // Hero area (big image + summary)
     const q = searchInput.value.trim();
+    // clear messages area immediately to avoid showing stale messages from previous profile
+    try{ const msgsEl = el('#messages'); if(msgsEl) msgsEl.innerHTML = ''; }catch(e){}
     const aboutText = firstAboutText(p) || '';
     // normalize and dedupe media images; only keep local images
     const mediaNorm = (p.media_images||[]).map(normalizeImageUrl).filter(x=>x);
@@ -412,7 +414,7 @@
       }
     } else {
       // if no messages on the profile object, attempt to find authored messages in groups.json
-      try{
+        try{
         const groups = await loadGroups();
         if(Array.isArray(groups) && groups.length){
           // normalize helpers to reduce accidental/short matches
@@ -471,7 +473,10 @@
             for(const it of found){ const m = it.message; const item = document.createElement('div'); item.className='message-item'; item.style.borderLeft = '3px solid #eee'; item.style.padding = '8px'; item.style.marginBottom = '8px'; const header = document.createElement('div'); header.style.fontSize='14px'; header.style.marginBottom='6px'; if(it.groupName){ const gslug = slugifyName(it.groupName); const a = document.createElement('a'); a.href = 'groups.html#' + encodeURIComponent(gslug); a.textContent = it.groupName; a.style.marginRight='8px'; a.addEventListener('click',(ev)=>{ ev.stopPropagation(); }); header.appendChild(a); } if(it.topicTitle){ const tlink = document.createElement('a'); tlink.href = 'topic.html?groupName=' + encodeURIComponent(it.groupName||'') + '&topicTitle=' + encodeURIComponent(it.topicTitle); tlink.textContent = it.topicTitle; tlink.style.color='var(--accent)'; tlink.style.marginLeft='6px'; tlink.addEventListener('click',(ev)=>{ ev.stopPropagation(); }); header.appendChild(tlink); } item.appendChild(header); const body = document.createElement('div'); body.className='message-body'; body.style.whiteSpace='pre-wrap'; body.style.marginTop='6px'; const text = m.message || m.body || m.text || m.content || ''; body.innerHTML = escapeHtml(String(text)); item.appendChild(body); msgsWrap2.appendChild(item); }
           }
         }
-      }catch(e){/* ignore errors */}
+      }catch(e){
+        // ensure messages area is cleared on error
+        try{ const msgsElErr = el('#messages'); if(msgsElErr) msgsElErr.innerHTML = ''; }catch(e2){}
+      }
     }
 
     // mark selected item in the list (and scroll into view)
