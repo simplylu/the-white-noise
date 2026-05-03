@@ -1,0 +1,69 @@
+// topic.js — extracted from topic.html inline script
+(async function(){
+  try{
+    function qs(name){ const params = new URLSearchParams(location.search); return params.get(name); }
+    const gIdx = qs('groupIdx'); const tIdx = qs('topicIdx'); const topicUrl = qs('topic_url');
+    // find JSON candidates (project-aware) — guard PROJECT_BASE
+    const base = (typeof PROJECT_BASE === 'string' && PROJECT_BASE) ? PROJECT_BASE : '/';
+    const candidates = [base + 'groups.json', '../groups.json', '/groups.json', 'groups.json'];
+    let url = null;
+    for(const c of candidates){ try{ const r = await fetch(c,{cache:'no-store'}); if(r && r.ok){ url = c; break; } }catch(e){} }
+    if(!url){ document.getElementById('topicContainer').innerHTML = '<div style="padding:24px">groups.json not found</div>'; return; }
+    let resp;
+    try{ resp = await fetch(url); }catch(e){ document.getElementById('topicContainer').innerHTML = '<div style="padding:24px">Failed to fetch groups.json</div>'; return; }
+    const all = await resp.json();
+  let group=null, topic=null; let gIndex=null, tIndex=null;
+  if(gIdx !== null && tIdx !== null){ gIndex = parseInt(gIdx,10); tIndex = parseInt(tIdx,10); group = all[gIndex]; if(group) topic = (group.topics||[])[tIndex]; }
+  if(!topic && topicUrl){
+    for(let gi=0;gi<all.length;gi++){ const g = all[gi]; const ts = g.topics||[]; for(let ti=0;ti<ts.length;ti++){ if(ts[ti].topic_url === topicUrl){ group=g; topic=ts[ti]; gIndex=gi; tIndex=ti; break; } } if(topic) break; }
+  }
+  if(!topic){
+    const groupNameParam = qs('groupName'); const topicTitleParam = qs('topicTitle');
+    if(groupNameParam && topicTitleParam){
+      const gNameLc = String(groupNameParam).toLowerCase(); const tTitleLc = String(topicTitleParam).toLowerCase();
+      for(let gi=0;gi<all.length;gi++){
+        const g = all[gi]; if(!g) continue; const name = (g.name||'').toLowerCase(); if(!name.includes(gNameLc)) continue;
+        const ts = g.topics||[];
+        for(let ti=0;ti<ts.length;ti++){
+          const tt = (ts[ti].title||'').toLowerCase(); if(tt.includes(tTitleLc) || tTitleLc.includes(tt)) { group=g; topic=ts[ti]; gIndex=gi; tIndex=ti; break; }
+        }
+        if(topic) break;
+      }
+    }
+  }
+  if(!topic){ document.getElementById('topicContainer').innerHTML = '<div style="padding:24px">Topic not found</div>'; return; }
+  const qParam = qs('q');
+  document.getElementById('topicTitle').textContent = topic.title || 'Topic';
+  function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+  if(qParam){ const qre = new RegExp(escapeRegex(qParam), 'ig'); const titleEl = document.getElementById('topicTitle'); titleEl.innerHTML = (titleEl.textContent||'').replace(qre, (m)=>`<mark class="search-hit">${m}</mark>`); }
+  const metaParts = [];
+  if(group && group.name) metaParts.push('Group: ' + group.name);
+  if(topic.started_by) metaParts.push('Started by: ' + topic.started_by);
+  if(topic.replies !== undefined) metaParts.push(topic.replies + ' replies');
+  document.getElementById('topicMeta').textContent = metaParts.join(' • ');
+  const back = document.getElementById('backToGroup');
+  const groupHash = group && group.name ? encodeURIComponent(group.name.replace(/\s+/g,'-').toLowerCase()) : '';
+  back.href = 'groups.html' + (qParam ? ('?q=' + encodeURIComponent(qParam)) : '') + (groupHash ? ('#' + groupHash) : '');
+  const container = document.getElementById('topicMessages'); container.innerHTML = '';
+  const msgs = (topic.messages||[]).slice();
+  msgs.sort((a,b)=>{ const A = a.date_parsed ? Date.parse(a.date_parsed) : 0; const B = b.date_parsed ? Date.parse(b.date_parsed) : 0; if(A && B) return A - B; return 0; });
+  const hits = [];
+  for(const [mi, m] of msgs.entries()){
+    const el = document.createElement('article'); el.className='topic-message';
+    const head = document.createElement('div');
+    const displayName = m.author_name || m.username || 'Anonymous';
+    let authorHtml = `<span class="msg-author">${escapeHtml(displayName)}</span>`;
+    if(m.username){ const slug = String(m.username).trim().replace(/[^a-z0-9-_]+/ig,'-').replace(/(^-|-$)/g,'').toLowerCase(); authorHtml += ` <a class="author-link" href="profiles.html#${encodeURIComponent(slug)}">@${escapeHtml(m.username)}</a>`; }
+    if(m.date_text) authorHtml += ` <span class="msg-date">${escapeHtml(m.date_text)}</span>`;
+    head.innerHTML = authorHtml;
+    const body = document.createElement('div'); body.className='message-body'; body.innerHTML = m.message || '';
+    if(qParam){ try{ const qre = new RegExp(escapeRegex(qParam), 'ig'); if(body.innerHTML && qre.test(body.innerHTML)){ body.innerHTML = body.innerHTML.replace(qre, (mm)=>`<mark class="search-hit">${mm}</mark>`); hits.push(el); } }catch(e){} }
+    el.appendChild(head); el.appendChild(body); container.appendChild(el);
+  }
+    if(typeof hits !== 'undefined' && hits.length>0){ try{ const first = hits[0]; first.scrollIntoView({behavior:'smooth', block:'center'}); first.style.outline = '3px solid rgba(43,140,196,0.25)'; setTimeout(()=>{ first.style.outline = ''; }, 3000); }catch(e){} }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  }catch(err){
+    console.error('topic.js error', err);
+    try{ document.getElementById('topicContainer').innerHTML = '<div style="padding:24px">Error loading topic: '+ (err && err.message ? escapeHtml(err.message) : String(err)) +'</div>'; }catch(e){}
+  }
+})();

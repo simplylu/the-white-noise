@@ -1,0 +1,70 @@
+/* Mobile-first overrides for site — saved as mobile_styles.css */
+:root{--mobile-hit:48px}
+html,body{overflow-x:hidden}
+body{font-size:17px;line-height:1.35}
+header{padding:12px 14px}
+.branding{display:flex;gap:10px;align-items:center}
+.branding .logo img{width:44px;height:44px;object-fit:cover}
+.title h1{font-size:18px;margin:0}
+.controls{margin-top:8px}
+.nav-links{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page-controls input{flex:1 1 auto;min-width:0;padding:10px;border-radius:8px;border:1px solid #e6e6e6}
+.page-controls button{padding:10px 12px;border-radius:8px;min-height:var(--mobile-hit)}
+main{padding:8px}
+/* Stack aside + detail vertically */
+aside#results{width:100%;order:0;margin-bottom:10px}
+section#detail{width:100%;order:1}
+#list{display:flex;flex-direction:column;gap:8px;padding:0;margin:0}
+#list li.item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;border:1px solid #f0eef0;background:#fff;list-style:none}
+#list li.item .thumb{width:64px;height:64px;object-fit:cover;border-radius:8px}
+.meta .title{font-size:16px}
+.meta .sub{font-size:13px;color:var(--muted)}
+.field{padding:8px;border-bottom:1px dashed #f3e6eb}
+.field .k{font-weight:600;margin-bottom:6px}
+
+/* Collapsible filters */
+#filters{transition:height 220ms ease,opacity 180ms ease}
+#filters.mobile-collapsed{height:0;opacity:0;overflow:hidden;padding:0;margin:0}
+.filter-toggle{display:block;width:100%;padding:10px;border-radius:8px;margin-bottom:8px;background:linear-gradient(180deg,#fff,#fafafa);border:1px solid #eee;text-align:center;font-weight:600}
+
+/* Dashboard: single column stacking */
+.dash-grid{display:grid;grid-template-columns:1fr;gap:12px;padding:12px}
+.panel{padding:10px;border-radius:10px;background:#fff;border:1px solid #f3e6eb}
+.panel h2{font-size:16px;margin:0 0 8px 0}
+canvas{max-width:100% !important;height:auto !important}
+/* Ensure charts on mobile have a fixed height to avoid growing canvas issues */
+.panel canvas{height:220px !important}
+
+/* touch-friendly pills */
+.group-pill, .chip{padding:10px 12px;border-radius:999px;display:inline-block}
+
+/* allow header to wrap so nav and controls don't force horizontal scrolling */
+header{flex-wrap:wrap}
+
+@media(min-width:720px){
+  /* larger screens will keep existing desktop styles — small tweaks */
+  .nav-links{display:flex}
+  .dash-grid{grid-template-columns:repeat(2,1fr)}
+  #list li.item .thumb{width:48px;height:48px}
+}
+
+/* Compact header & nav for mobile */
+header{padding:10px 12px}
+.logo{width:44px;height:44px}
+.branding .logo img{width:44px;height:44px}
+.title h1{font-size:16px;margin:0}
+.title .subtitle{font-size:12px;color:var(--muted)}
+.controls{margin-top:6px}
+.controls.mobile-nav-wrap{width:100%;margin-top:8px}
+.nav-links{gap:6px}
+.nav-links a{padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(0,0,0,0.06);color:inherit;font-weight:600}
+.nav-links a:hover{background:rgba(0,0,0,0.04)}
+
+/* Position mobile nav over the search input (visually on top) */
+/* stack nav above and below the search input on mobile */
+header .controls{display:flex;flex-direction:column;align-items:flex-start}
+header .mobile-nav-wrap{width:100%;margin-top:6px}
+/* ensure search input is full width in stacked layout */
+.page-controls input{padding-right:12px}
+@media(min-width:720px){ header .controls{flex-direction:column} }

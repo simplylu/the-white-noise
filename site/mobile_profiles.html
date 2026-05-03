@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>The White Noise</title>
+  <title>Profiles — Mobile View</title>
   <script>
   (function(){
     try{
@@ -17,6 +17,7 @@
   })();
   </script>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="mobile_styles.css">
 </head>
 <body>
   <header>
@@ -24,27 +25,31 @@
       <div class="logo"><img src="logo.png" alt="logo"/></div>
       <div class="title">
         <h1>The White Noise</h1>
-        <div class="subtitle">Behind the curtain of whitedate.net</div>
+        <div class="subtitle">Mobile profiles</div>
       </div>
     </div>
     <div class="controls">
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="groups.html">Groups</a>
-        <a href="profiles.html">Profiles</a>
-        <a href="dashboard.html">Analytics</a>
-      </nav>
-      <div class="page-controls">
-        <input id="search" placeholder="Search profiles (name, city, country, membership, interests...)" />
-        <button id="clear">Clear</button>
-        <button id="showAll">Show all</button>
+      <!-- top nav (above search) -->
+      <div class="controls mobile-nav-wrap top-nav">
+        <nav class="nav-links">
+          <a href="mobile_profiles.html">Profiles</a>
+          <a href="mobile_groups.html">Groups</a>
+          <a href="mobile_dashboard.html">Stats</a>
+          <a href="index.html">Home</a>
+        </nav>
       </div>
-      
+      <div class="page-controls">
+          <input id="search" placeholder="Search profiles" />
+          <button id="clear">Clear</button>
+          <button id="showAll">Show all</button>
+        </div>
     </div>
+    
   </header>
 
   <main>
     <aside id="results">
+      <button id="mobileFilterToggle" class="filter-toggle">Show filters</button>
       <div id="filters"></div>
       <div id="resultsCount"></div>
       <ul id="list"></ul>
@@ -71,17 +76,25 @@
     </li>
   </template>
 
-  <!-- Image modal for fullscreen preview -->
-  <div id="imgModal" class="img-modal" aria-hidden="true">
-    <div class="img-modal-backdrop" data-action="close"></div>
-    <div class="img-modal-inner">
-      <button class="img-modal-close" aria-label="Close image">✕</button>
-      <img id="imgModalImg" src="" alt="" />
-      <div id="imgModalCaption" class="img-modal-caption"></div>
-    </div>
-  </div>
-
+  <script>
+    // Ensure app.js will look for profiles.json at repo root when served from /site/
+    try{ window.PROJECT_BASE = window.PROJECT_BASE || '/'; }catch(e){}
+  </script>
   <script src="app.js"></script>
+  <script>
+    // small mobile helper: toggle filters area created by app.js
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const btn = document.getElementById('mobileFilterToggle');
+      const filters = document.getElementById('filters');
+      if(!filters || !btn) return;
+      // start collapsed
+      filters.classList.add('mobile-collapsed');
+      btn.addEventListener('click', ()=>{
+        const hidden = filters.classList.toggle('mobile-collapsed');
+        btn.textContent = hidden ? 'Show filters' : 'Hide filters';
+      });
+    });
+  </script>
   <script src="mobile_switch.js"></script>
 </body>
 </html>

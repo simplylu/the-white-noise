@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Topic — Mobile View</title>
+  <script>
+  (function(){
+    try{ const parts = location.pathname.split('/').filter(Boolean); const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/'; window.PROJECT_BASE = project; if(location.hostname && location.hostname.endsWith('github.io')){ document.querySelectorAll('link[href], script[src], img[src]').forEach(el=>{ ['href','src'].forEach(a=>{ if(el.hasAttribute(a)){ const v=el.getAttribute(a); if(v && v.startsWith('/') && !v.startsWith('//')) el.setAttribute(a, project + v.replace(/^\/+/,'')); }}); }); } }catch(e){}
+  })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="mobile_styles.css">
+  <style>
+    .topic-header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .topic-meta{color:var(--muted);font-size:14px}
+    .topic-message{background:#fff;padding:10px;border-radius:10px;border:1px solid #f3e6eb;margin-bottom:10px}
+    .msg-author{font-weight:700;color:var(--accent)}
+    .msg-date{color:var(--muted);font-size:13px;margin-left:8px}
+    .message-body{margin-top:8px;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="branding">
+      <div class="logo"><img src="logo.png" alt="logo"/></div>
+      <div class="title">
+        <h1>The White Noise</h1>
+        <div class="subtitle">Topic view</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="page-controls">
+        <a id="backToGroup" class="backlink" href="#">Back</a>
+      </div>
+    </div>
+      <div class="controls mobile-nav-wrap" style="padding:0 12px 6px 12px">
+        <nav class="nav-links">
+          <a href="mobile_profiles.html">Profiles</a>
+          <a href="mobile_groups.html">Groups</a>
+          <a href="mobile_dashboard.html">Stats</a>
+          <a href="index.html">Home</a>
+        </nav>
+      </div>
+    </header>
+
+  <main style="padding:12px">
+    <div id="topicContainer">
+      <div class="topic-header"><h2 id="topicTitle"></h2><div class="topic-meta" id="topicMeta"></div></div>
+      <div id="topicMessages" style="margin-top:12px"></div>
+    </div>
+  </main>
+
+  <script>
+    // Ensure PROJECT_BASE resolves correctly when served from /site/
+    try{ window.PROJECT_BASE = window.PROJECT_BASE || '/'; }catch(e){}
+  </script>
+  <script src="topic.js"></script>
+  <script>
+    // topic logic is in topic.js
+  </script>
+    <script src="mobile_switch.js"></script>
+  </body>
+</html>

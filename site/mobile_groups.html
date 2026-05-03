@@ -3,27 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Groups — The White Noise</title>
+  <title>Groups — Mobile View</title>
   <script>
   (function(){
-    try{
-      const parts = location.pathname.split('/').filter(Boolean);
-      const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/';
-      window.PROJECT_BASE = project;
-      if(location.hostname && location.hostname.endsWith('github.io')){
-        document.querySelectorAll('link[href], script[src], img[src]').forEach(el=>{ ['href','src'].forEach(a=>{ if(el.hasAttribute(a)){ const v=el.getAttribute(a); if(v && v.startsWith('/') && !v.startsWith('//')) el.setAttribute(a, project + v.replace(/^\/+/,'')); }}); });
-      }
-    }catch(e){}
+    try{ const parts = location.pathname.split('/').filter(Boolean); const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/'; window.PROJECT_BASE = project; if(location.hostname && location.hostname.endsWith('github.io')){ document.querySelectorAll('link[href], script[src], img[src]').forEach(el=>{ ['href','src'].forEach(a=>{ if(el.hasAttribute(a)){ const v=el.getAttribute(a); if(v && v.startsWith('/') && !v.startsWith('//')) el.setAttribute(a, project + v.replace(/^\/+/,'')); }}); }); } }catch(e){}
   })();
   </script>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    .backlinks{display:flex;gap:8px;align-items:center;margin-left:12px}
-    .topic-list{margin-top:12px}
-    .topic-item{padding:10px;border-radius:8px;border:1px solid #f6e6ec;margin-bottom:8px;background:#fff}
-    .topic-item a{color:var(--accent);text-decoration:none;font-weight:600}
-    .meta-line{color:var(--muted);font-size:13px;margin-top:6px}
-  </style>
+  <link rel="stylesheet" href="mobile_styles.css">
 </head>
 <body>
   <header>
@@ -31,22 +18,25 @@
       <div class="logo"><img src="logo.png" alt="logo"/></div>
       <div class="title">
         <h1>The White Noise</h1>
-        <div class="subtitle">Behind the curtain of whitedate.net</div>
+        <div class="subtitle">Mobile groups</div>
       </div>
     </div>
     <div class="controls">
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="groups.html">Groups</a>
-        <a href="profiles.html">Profiles</a>
-        <a href="dashboard.html">Analytics</a>
-      </nav>
+      <!-- top nav (above search) -->
+      <div class="controls mobile-nav-wrap top-nav">
+        <nav class="nav-links">
+          <a href="mobile_profiles.html">Profiles</a>
+          <a href="mobile_groups.html">Groups</a>
+          <a href="mobile_dashboard.html">Stats</a>
+          <a href="index.html">Home</a>
+        </nav>
+      </div>
       <div class="page-controls">
-        <input id="search" placeholder="Search groups (case-insensitive, anywhere in JSON)" />
+        <input id="search" placeholder="Search groups" />
         <button id="clear">Clear</button>
       </div>
-      
     </div>
+    
   </header>
 
   <main>
@@ -54,7 +44,6 @@
       <div id="resultsCount"></div>
       <ul id="list"></ul>
     </aside>
-
     <section id="detail">
       <div id="detailInner">
         <div id="detailHeader"><h2 id="detailName"></h2><div id="detailMeta"></div></div>
@@ -80,6 +69,12 @@
   </template>
 
   <script src="groups.js"></script>
+  <script>
+    // minor mobile tweak: enlarge search input touch area
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const s = document.getElementById('search'); if(s) s.style.padding = '12px';
+    });
+  </script>
   <script src="mobile_switch.js"></script>
 </body>
 </html>

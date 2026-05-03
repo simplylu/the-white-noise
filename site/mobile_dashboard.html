@@ -3,39 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dataset Dashboard</title>
+  <title>Dashboard — Mobile View</title>
   <script>
   (function(){
-    try{
-      const parts = location.pathname.split('/').filter(Boolean);
-      const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/';
-      window.PROJECT_BASE = project;
-      // rewrite absolute-root assets to project-prefixed paths (only on github.io)
-      if(location.hostname && location.hostname.endsWith('github.io')){
-        const sel = 'link[href], script[src], img[src]';
-        document.querySelectorAll(sel).forEach(el=>{
-          const attrs = ['href','src'];
-          for(const a of attrs){ if(el.hasAttribute(a)){
-            const v = el.getAttribute(a);
-            if(v && v.startsWith('/') && !v.startsWith('//')){
-              el.setAttribute(a, project + v.replace(/^\/+/, ''));
-            }
-          }});
-      }
-    }catch(e){}
+    try{ const parts = location.pathname.split('/').filter(Boolean); const project = (location.hostname && location.hostname.endsWith('github.io') && parts.length>0) ? ('/' + parts[0] + '/') : '/'; window.PROJECT_BASE = project; if(location.hostname && location.hostname.endsWith('github.io')){ document.querySelectorAll('link[href], script[src], img[src]').forEach(el=>{ ['href','src'].forEach(a=>{ if(el.hasAttribute(a)){ const v=el.getAttribute(a); if(v && v.startsWith('/') && !v.startsWith('//')) el.setAttribute(a, project + v.replace(/^\/+/,'')); }}); }); } }catch(e){}
   })();
   </script>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="dashboard.css">
-  
+  <link rel="stylesheet" href="mobile_styles.css">
 </head>
 <body>
   <header>
     <div class="branding">
       <div class="logo"><img src="logo.png" alt="logo"/></div>
       <div class="title">
-        <h1>Profiles Analysis Dashboard</h1>
-        <div class="subtitle">Visual summaries from the flattened profiles dataset</div>
+        <h1>Profiles Dashboard</h1>
+        <div class="subtitle">Mobile analytics</div>
       </div>
     </div>
     <div class="controls">
@@ -47,7 +30,6 @@
       </nav>
     </div>
   </header>
-
   <div id="matrix-controls" style="padding:8px 16px;text-align:center;">Not every profile has filled out every information, which is why numbers differ from diagram to diagram.</div>
 
   <div id="matrix-controls" style="padding:8px 16px;text-align:center;">
@@ -140,7 +122,6 @@
   <footer class="dash-footer">Spike in 2019 was due to Corona, spike end of 2025 was because of some newspaper articles after the hack at CCC.</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Leaflet JS removed per request -->
   <script src="dashboard.js?v=2"></script>
   <script src="mobile_switch.js"></script>
 </body>

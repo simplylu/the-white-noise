@@ -25,15 +25,25 @@ header .page-controls{display:flex;gap:8px;align-items:center;margin-left:12px}
 
 /* constrain header inputs so they don't force the layout; keep buttons same height */
 header .controls input{padding:12px 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.14);min-width:220px;max-width:520px;background:rgba(255,255,255,0.03);color:#fff;font-size:15px}
+/* make room on the right side of the search for nav buttons that are positioned over it */
 header .controls .page-controls a, header .controls .page-controls button{height:40px;padding:8px 12px}
 
 /* Ensure header controls' nav buttons are consistently sized and aligned */
 header .controls{align-items:center}
+/* place the nav over the search input so buttons are visually on top */
+/* stack nav above and below the search input: controls become vertical by default */
+header .controls{display:flex;flex-direction:column;align-items:flex-start}
 header .controls .nav-links, header .controls .backlinks{display:flex;gap:8px;align-items:center}
+header .controls .nav-links{margin:6px 0}
 header .controls a{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:8px 12px;line-height:1;font-weight:600}
 /* make the back link match the same height and appearance */
 header a.backlink, header .controls a.backlink{height:40px;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px}
 @media (max-width:900px){ header .controls a{height:36px;padding:6px 10px} }
+@media (min-width:900px){
+	/* restore horizontal layout on wide screens */
+	header .controls{flex-direction:row;align-items:center}
+	header .controls .nav-links{margin:0 12px 0 0}
+}
 main{display:flex;gap:16px;padding:16px}
 #results{width:380px;max-height:calc(100vh - 120px);overflow:auto;background:var(--card);border:1px solid #ffe6ef;border-radius:10px;padding:10px}
 #filters{padding:8px;display:flex;flex-direction:column;gap:8px}
